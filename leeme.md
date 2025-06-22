@@ -41,9 +41,9 @@ Ejemplo completo de `.gitignore`:
 
 # Ignorar archivos específicos (descomentar para servidores)
 
-server.txt
-   metadata.csv
-   metadata.db
+# server.txt
+#  metadata.csv
+#  metadata.db
 # Python
 __pycache__/
 *.py[cod]
