@@ -1,0 +1,50 @@
+from sync_logic import initialize, sync_from_remotes, get_local_metadata, cleanup_deleted_files, \
+                      FILES_DIR, SERVERS_FILE
+from sync_client import fetch_remote_metadata, download_file, normalize_hash
+import os
+from datetime import datetime
+
+def sync_from_remotes():
+    """Sincroniza archivos desde servidores remotos"""
+    print("Iniciando sincronización desde servidores remotos...")
+    local_metadata = get_local_metadata()
+    all_remote_hashes = set()
+
+    with open(SERVERS_FILE, 'r') as f:
+        for line in f:
+            remote_csv_url = line.strip()
+            if not remote_csv_url.endswith("metadata.csv"):
+                continue
+
+            base_url = remote_csv_url.rsplit('/', 1)[0]
+            print(f"\nConsultando {remote_csv_url}")
+            remote_records = fetch_remote_metadata(remote_csv_url)
+
+            for record in remote_records:
+                hash_remote = normalize_hash(record["hash_md5"])
+                all_remote_hashes.add(hash_remote)
+                path_rel = record["path_rel"]
+                mod_time_remote = datetime.fromisoformat(record["modified_time"])
+                is_dir = int(record["is_dir"])
+
+                if hash_remote not in local_metadata:
+                    # No existe localmente
+                    if is_dir:
+                        os.makedirs(os.path.join(FILES_DIR, path_rel), exist_ok=True)
+                    else:
+                        download_file(base_url, path_rel, os.path.join(FILES_DIR, path_rel))
+                    update_local_db(record)
+
+                else:
+                    # Existe localmente, comparamos fechas
+                    mod_time_local = datetime.fromisoformat(local_metadata[hash_remote]["modified_time"])
+                    if mod_time_remote > mod_time_local:
+                        print(f"Conflicto: {path_rel} remoto más reciente → actualizando")
+                        if not is_dir:
+                            download_file(base_url, path_rel, os.path.join(FILES_DIR, path_rel))
+                        update_local_db(record)
+
+    # Limpieza de archivos eliminados remotamente
+    cleanup_deleted_files(all_remote_hashes)
+
+# Nota: Eliminado el if __name__ == '__main__' para que sea controlado desde main.py
