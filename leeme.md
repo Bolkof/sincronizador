@@ -40,10 +40,10 @@ Ejemplo completo de `.gitignore`:
 # Sync/
 
 # Ignorar archivos específicos (descomentar para servidores)
-# *.txt
-# *.csv
-# *.db
 
+server.txt
+   metadata.csv
+   metadata.db
 # Python
 __pycache__/
 *.py[cod]
@@ -54,7 +54,7 @@ __pycache__/
 
 1. Clona el repositorio:
    ```bash
-   git clone [URL_DEL_REPOSITORIO]
+   https://github.com/Bolkof/sincronizador.git
    ```
 
 2. Instala las dependencias:
